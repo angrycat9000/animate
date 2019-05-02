@@ -28,20 +28,51 @@ function updateViz(i) {
 
 
 function stretch() {
-  let sc = new StretchAnimation(container, 'vertical');
-  sc.duration = '1s';
+  let compare = new StateComparison();
   
   for(let i = 0; i< container.children.length; i++) {
     updateViz(i);
   }
   
-  sc.animate();
+  compare.compare();
+  compare.differences.forEach((c)=>{
+    if(Diff.Move === c.action)
+      TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState)
+  });
+  /*compare.enter.forEach((c)=>{
+    new TransformAnimation(c.node, {scaleY:0});
+  })*/
 }
 
 function fade() {
+  let compare = new StateComparison();
+  
   for(let i = 0; i< container.children.length; i++) {
-    let fade = new FadeAnimation(container.children[i]);
     updateViz(i);
-    fade.animate();
   }
+  
+  compare.compare();
+  compare.differences.forEach((c)=>{
+    if(Diff.Enter === c.action)
+      new FadeInAnimation(c.node);
+  });
+
+}
+
+function addMore(e) {
+  let parent = e.currentTarget.parentElement;
+  let duplicate = parent.firstElementChild.cloneNode(true);
+  
+  let compare = new StateComparison();
+  
+  parent.insertBefore(duplicate, e.currentTarget);
+  
+  new FadeInAnimation(duplicate);
+  
+  compare.compare();
+   
+  compare.differences.forEach((c)=>{
+    if(Diff.Move === c.action) 
+      TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState);
+  });
 }

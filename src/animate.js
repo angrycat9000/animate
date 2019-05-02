@@ -1,57 +1,3 @@
-'use strict';
-
-/**
-* @class
-* @param {HTMLElement} element containing element to animated the children of.
-* @param {Array[string]} {cssProperties} names of any inline CSS properties to save from
-*/
-function State(element, cssProperties) {
-  this.top = element.offsetTop;
-  this.left = element.offsetLeft;
-  this.height = element.clientHeight;
-  this.width = element.clientWidth;
-  
-  let style = window.getComputedStyle(element);
-  this.display = style.display;
-  this.position = style.position;
-  
-  if(cssProperties) {
-    this.inlineCSS = {};
-    cssProperties.forEach((name,i) => {
-      this.inlineCSS[name] = element.style[name];
-    });
-  }
-}
-
-/*
-*
-*/
-State.prototype.isDisplayed = function() {
-  return 'none' !== this.display && this.width > 0 && this.height > 0;
-}
-
-/**
-* @param {State} other
-*/
-State.prototype.hasChange = function( other ) {
-  return this.width !== other.width ||
-    this.height !== other.height ||
-    this.top !== other.top ||
-    this.left !== other.left;
-}
-
-/**
-* @param {HTMLElement} element
-*/
-State.prototype.restoreInlineCSS = function (element) {
-  if(!this.inlineCSS)
-    return;
-  
-  for(let prop in this.inlineCSS) {
-    element.style[prop] = this.inlineCSS[prop];
-  }
-}
-
 /**
 * @class AnimationBase
 * @param {HTMLElement} element container element to animate elements within
@@ -83,7 +29,7 @@ AnimationBase.prototype.applyAnimation = function(element, name, direction) {
 }
 
 /*
-*
+* 
 */
 AnimationBase.prototype.animate = function() {
   
@@ -347,7 +293,7 @@ FadeAnimation.prototype.animate = function() {
     this.element.style.left = this.previous.left + 'px';
     this.element.style.marginTop = '0';
     this.applyAnimation(this.element,'fade', 'reverse');
-  }
+  } else
 }
 
 FadeAnimation.prototype.postAnimationCleanup = function(element) {
