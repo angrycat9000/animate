@@ -1,7 +1,7 @@
 class Coordinator {
   constructor() {
     this.firstFrame = [];
-    this.secondFrame = [];
+    this.secondFrame = []
     this.pending = new Map();
     this.onFrameFunc = this.onFrame.bind(this);
     this.requestId = 0;
@@ -40,6 +40,7 @@ class Coordinator {
   static onTransitionCancel(e) {Coordinator.active.onFinish(e.target, true)}
   
   onFinish(element, wasCanceled) {
+    console.debug('Coordinator.OnFinish', element, wasCanceled)
     let animation = this.pending.get(element);
     if(!animation)
       return;
@@ -55,11 +56,13 @@ class Coordinator {
   }
   
   add(animation) {
+    console.debug('Coordinator.Add', animation)
     this.firstFrame.push(animation);
     this.requestFrame();
   }
   
   requestFrame() {
+    console.debug('Coordinator.RequestFrame', this.requestId)
     if(this.requestId !== 0)
       return;
     
@@ -67,11 +70,8 @@ class Coordinator {
   }
   
   onFrame() {
-    console.log(this.requestId, this.firstFrame, this.secondFrame);
+    console.group('Coordinator.OnFrame', this.requestId, this.ready);
     this.requestId = 0;
-    
-    for(let f of this.firstFrame)
-      f.firstFrame();
     
     for(let s of this.secondFrame)
       s.secondFrame();
@@ -81,8 +81,10 @@ class Coordinator {
     this.secondFrame = this.firstFrame;
     this.firstFrame = [];
     
-    if(this.secondFrame.length > 0)
+    if(this.secondFrame.length)
       this.requestFrame();
+    
+    console.groupEnd();
   } 
 }
 

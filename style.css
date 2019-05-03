@@ -40,12 +40,18 @@ button {
 }
 
 
+.animate--transform, 
+.animate--opacity {
+  transition-duration:4s}
+
+.animate-delay {
+  transition-delay: 0.5s;
+}
+
 .animate--transform {
   transition-property: transform;
-  transition-duration: 0.5s;
 }
 
 .animate--opacity {
   transition-property: opacity;
-  transition-duration: 0.5s;
 }

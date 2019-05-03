@@ -37,7 +37,7 @@ function stretch() {
   compare.compare();
   compare.differences.forEach((c)=>{
     if(Diff.Move === c.action)
-      TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState)
+      TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play()
   });
   /*compare.enter.forEach((c)=>{
     new TransformAnimation(c.node, {scaleY:0});
@@ -57,9 +57,11 @@ function fade() {
   let move = compare.differences.filter(c=>Diff.Move === c.action);
   let enter = compare.differences.filter(c=>Diff.Enter === c.action);
   
-  move = move.map(c=>TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).promise)
+  move = move.map(c=>TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play().promise);
+  enter = enter.map(c=>new FadeInAnimation(c.node));
+  
   Promise.all(move).then(()=>{
-    enter = enter.map(c=>new FadeInAnimation(c.node));
+    enter.forEach(a=>a.play());
   })
 }
 
@@ -77,6 +79,8 @@ function addMore(e) {
    
   compare.differences.forEach((c)=>{
     if(Diff.Move === c.action) 
-      TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState);
+      TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play();
+    else if (Diff.Enter === c.action)
+      new FadeInAnimation(c.node).play();
   });
 }

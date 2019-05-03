@@ -4,16 +4,36 @@ let AnimationType = {
   Unknown: '',
 };
 
+let AnimationState = {
+  None: 'none',                     // no set up done yet.
+  Initialized: 'init',              // frame one set, but not ready for frame 2
+  Ready: 'ready',                   // ready to play frame 2
+  PendingComplete : 'playing',      // frame 2 - N
+  Complete: 'complete'              // finished and cleaned up
+  
+  // Frame One    Construction
+  
+  // Frame 2      Play
+  
+  // Frame N+1    Cleanup
+}
+
 class ElementAnimation {
   /**
   * @param {HTMLElement} target
   */
   constructor(target) {
     this.target = target;
-        
-    Coordinator.add(this);
+    this.state = AnimationState.None;
   }
   
+  /**
+  *
+  */
+  play() {
+    Coordinator.add(this);
+    return this;
+  }
   
   /**
   * Call to set up the first frame of the animation
@@ -26,7 +46,6 @@ class ElementAnimation {
   * if using the transition property instead of animation keyframes
   */
   secondFrame() {
-    
   }
   
   /**
@@ -34,6 +53,7 @@ class ElementAnimation {
   * call super.afterComplete AFTER they have finished their work.
   */
   afterComplete(wasCanceled) {
+    console.debug('ElementAnimation.afterComplete', this.target);
     this.isComplete = true;
     if(this.resolveNotify)
       this.resolveNotify();
@@ -64,6 +84,9 @@ class ElementAnimation {
     return this.promise.then(onResolve, onReject);
   }
 
+  toString() {
+    return 'ElementAnimation' + this.target;
+  }
 }
   
   
@@ -84,6 +107,12 @@ class TransformAnimation extends ElementAnimation {
     
     this.baseTransform = window.getComputedStyle(this.target).transform;
     this.inlineTransform = this.target.style.transform;
+    
+    this.firstFrame();
+  }
+  
+  toString() {
+    return `TransformAnimation (t=${this.translateX},${this.translateY} s=${this.scaleX}, ${this.scaleY}) ${this.target}`;
   }
   
   get animationType() {
@@ -110,16 +139,19 @@ class TransformAnimation extends ElementAnimation {
     return new TransformAnimation(element, options);
   }
  
-  firstFrame() {  
+  firstFrame() {
+    console.debug('TransformAnimation.firstFrame', this.target)
     let transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scaleX}, ${this.scaleY})`;
     
     if(this.baseTransform && 'none' !== this.baseTransform)
       transform += ' ' + this.baseTransform
 
     this.target.style.transform = transform;
+  
   }
   
   secondFrame() {
+        console.debug('TransformAnimation.secondFrame', this.target)
     this.target.classList.add('animate--transform');
     this.target.style.transform = this.inlineTransform;
   }
@@ -136,10 +168,14 @@ class TransformAnimation extends ElementAnimation {
 class FadeInAnimation extends ElementAnimation {
   constructor(element) {
     super(element);
+    this.firstFrame();
+  }
+  toString() {
+    return 'FadeIn ' + this.target.ToString();
   }
   
   firstFrame() {
-    this.target.style.opacity = '0';
+    this.target.style.opacity = 0;
   }
   
   secondFrame() {
@@ -158,7 +194,8 @@ class FadeInAnimation extends ElementAnimation {
 */
 class FadeOutAnimation extends ElementAnimation {
   constructor(element) {
-    super(element)
+    super(element);
+    this.firstFrame();
   }
   
   get animationType() {
@@ -169,11 +206,12 @@ class FadeOutAnimation extends ElementAnimation {
     this.target.style.top = this.previousState.top  + 'px';
     this.target.style.left = this.previousState.left + 'px';
     this.target.style.position = 'relative';
+    this.target.style.opacity = 1;
   }
   
   secondFrame() {
     this.target.classList.add('animate--opacity');
-    this.target.style.opacity = '0';
+    this.target.style.opacity = 0;
   }
   
   afterComplete() {
