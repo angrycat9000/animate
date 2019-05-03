@@ -1,3 +1,9 @@
+let AnimationType = {
+  Animation: 'animation',
+  Transition: 'transition',
+  Unknown: '',
+};
+
 class ElementAnimation {
   /**
   * @param {HTMLElement} target
@@ -8,26 +14,6 @@ class ElementAnimation {
     Coordinator.add(this);
   }
   
-  /**
-  *
-  */
-  animate() {
-
-  }
-
-  /**
-  * Called when the DOM is in the initial state
-  */
-  beforeChange() {
-    
-  }
-  
-  /**
-  * Called after the DOM has been modified to represent the final state
-  */
-  afterChange() {
-    
-  }
   
   /**
   * Call to set up the first frame of the animation
@@ -44,10 +30,38 @@ class ElementAnimation {
   }
   
   /**
-  * Called after the animation is finished
+  * Called after the animation is finished.  Classes extending this should
+  * call super.afterComplete AFTER they have finished their work.
   */
-  afterComplete() {
-    
+  afterComplete(wasCanceled) {
+    this.isComplete = true;
+    if(this.resolveNotify)
+      this.resolveNotify();
+  }
+  
+  get animationType() {
+    return AnimationType.Unknown
+  }
+  
+  /**
+  *
+  */
+  get promise() {
+    this._promise = this._promise || new Promise((resolve, reject)=>{
+      if(this.isComplete)
+        return Promise.resolve();
+
+      this.resolveNotify = resolve;
+    });
+
+    return this._promise;
+  }
+  
+  /**
+  *
+  */
+  then(onResolve, onReject) {
+    return this.promise.then(onResolve, onReject);
   }
 
 }
@@ -70,6 +84,10 @@ class TransformAnimation extends ElementAnimation {
     
     this.baseTransform = window.getComputedStyle(this.target).transform;
     this.inlineTransform = this.target.style.transform;
+  }
+  
+  get animationType() {
+    return AnimationType.Transition
   }
   
   static parseTranslate(t) {
@@ -102,16 +120,13 @@ class TransformAnimation extends ElementAnimation {
   }
   
   secondFrame() {
-    this.completeFunc = this.afterComplete.bind(this);
-    this.target.addEventListener('transitionend', this.completeFunc);
-    
     this.target.classList.add('animate--transform');
     this.target.style.transform = this.inlineTransform;
   }
   
   afterComplete() {
-    this.target.removeEventListener('transitionend', this.completeFunc);
     this.target.classList.remove('animate--transform');
+    super.afterComplete();
   }
 }
 
@@ -131,6 +146,11 @@ class FadeInAnimation extends ElementAnimation {
     this.target.classList.add('animate--opacity');
     this.target.style.opacity = '';
   }
+  
+  afterComplete() {
+    this.target.classList.remove('animate--opacity');
+    super.afterComplete();
+  }
 }
 
 /**
@@ -139,6 +159,10 @@ class FadeInAnimation extends ElementAnimation {
 class FadeOutAnimation extends ElementAnimation {
   constructor(element) {
     super(element)
+  }
+  
+  get animationType() {
+    return AnimationType.Transition
   }
   
   firstFrame() {
@@ -150,5 +174,10 @@ class FadeOutAnimation extends ElementAnimation {
   secondFrame() {
     this.target.classList.add('animate--opacity');
     this.target.style.opacity = '0';
+  }
+  
+  afterComplete() {
+    this.target.classList.remove('animate--opacity');
+    super.afterComplete();
   }
 }

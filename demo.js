@@ -52,11 +52,15 @@ function fade() {
   }
   
   compare.compare();
-  compare.differences.forEach((c)=>{
-    if(Diff.Enter === c.action)
-      new FadeInAnimation(c.node);
-  });
-
+  
+  let exit = compare.differences.filter(c=>Diff.Exit === c.action);
+  let move = compare.differences.filter(c=>Diff.Move === c.action);
+  let enter = compare.differences.filter(c=>Diff.Enter === c.action);
+  
+  move = move.map(c=>TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).promise)
+  Promise.all(move).then(()=>{
+    enter = enter.map(c=>new FadeInAnimation(c.node));
+  })
 }
 
 function addMore(e) {
