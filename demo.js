@@ -28,59 +28,57 @@ function updateViz(i) {
 
 
 function stretch() {
-  let compare = new StateComparison();
-  
-  for(let i = 0; i< container.children.length; i++) {
-    updateViz(i);
-  }
-  
-  compare.compare();
-  compare.differences.forEach((c)=>{
-    if(Diff.Move === c.action)
-      TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play()
-  });
-  /*compare.enter.forEach((c)=>{
-    new TransformAnimation(c.node, {scaleY:0});
-  })*/
+  DeltaAnimation.animateChange(
+    ()=>{
+      for(let i = 0; i< container.children.length; i++) updateViz(i);
+    }, 
+    (differences)=>{
+      differences.forEach((c)=>{
+        if(Diff.Move === c.action)
+          TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play()
+      })
+    }
+  );
 }
 
 function fade() {
-  let compare = new StateComparison();
-  
-  for(let i = 0; i< container.children.length; i++) {
-    updateViz(i);
-  }
-  
-  compare.compare();
-  
-  let exit = compare.differences.filter(c=>Diff.Exit === c.action);
-  let move = compare.differences.filter(c=>Diff.Move === c.action);
-  let enter = compare.differences.filter(c=>Diff.Enter === c.action);
-  
-  move = move.map(c=>TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play().promise);
-  enter = enter.map(c=>new FadeInAnimation(c.node));
-  
-  Promise.all(move).then(()=>{
-    enter.forEach(a=>a.play());
-  })
+  DeltaAnimation.animateChange(
+    ()=>{
+      for(let i = 0; i< container.children.length; i++) {
+        updateViz(i);
+      }
+    },
+    (differences)=>{
+      let exit = differences.filter(c=>Diff.Exit === c.action);
+      let move = differences.filter(c=>Diff.Move === c.action);
+      let enter = differences.filter(c=>Diff.Enter === c.action);
+      
+      move = move.map(c=>TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play().promise);
+      enter = enter.map(c=>new FadeInAnimation(c.node));
+
+      DeltaAnimation.animateChange(()=>{}, ()=>{enter.forEach(a=>a.play())});
+    }
+  );
 }
 
 function addMore(e) {
-  let parent = e.currentTarget.parentElement;
+  // save this info because the event may be reused by the time
+  // processing occurs
+  let target = e.currentTarget;
+  let parent = target.parentElement;
   let duplicate = parent.firstElementChild.cloneNode(true);
-  
-  let compare = new StateComparison();
-  
-  parent.insertBefore(duplicate, e.currentTarget);
-  
-  new FadeInAnimation(duplicate);
-  
-  compare.compare();
-   
-  compare.differences.forEach((c)=>{
-    if(Diff.Move === c.action) 
-      TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play();
-    else if (Diff.Enter === c.action)
-      new FadeInAnimation(c.node).play();
-  });
+
+  DeltaAnimation.animateChange(
+    ()=>{
+      parent.insertBefore(duplicate, target);
+    },
+    (differences)=>{
+      differences.forEach((c)=>{
+        if(Diff.Move === c.action) 
+          TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play();
+        else if (Diff.Enter === c.action)
+          new FadeInAnimation(c.node).play();
+      });
+    }
+  );
 }

@@ -31,7 +31,7 @@ class ElementAnimation {
   *
   */
   play() {
-    Coordinator.add(this);
+    Coordinator.addAnimation(this);
     return this;
   }
   
@@ -151,7 +151,7 @@ class TransformAnimation extends ElementAnimation {
   }
   
   secondFrame() {
-        console.debug('TransformAnimation.secondFrame', this.target)
+    console.debug('TransformAnimation.secondFrame', this.target, this)
     this.target.classList.add('animate--transform');
     this.target.style.transform = this.inlineTransform;
   }
