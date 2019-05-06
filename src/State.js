@@ -17,6 +17,7 @@ Translation.None = new Translation(0,0);
 * @param {Array[string]} {cssProperties} names of any inline CSS properties to save from
 */
 function State(element, cssProperties) {
+  this.element = element;
   this.offsetTop = element.offsetTop;
   this.offsetLeft = element.offsetLeft;
   
@@ -28,19 +29,31 @@ function State(element, cssProperties) {
   this.height = element.clientHeight;
   this.width = element.clientWidth;
   
-  this.offsetParent = element.offsetParent;
+  //this.offsetParent = element.offsetParent;
+  this.parentElement = element.parentElement;
 
-  let style = window.getComputedStyle(element);
-  this.display = style.display;
-  this.position = style.position;
+  let style = this.liveStyle = window.getComputedStyle(element);
   
   this.inlineStyle = {};
-  this.computedStyle = {};  
+  this.computedStyle = {};
   
-  cssProperties = cssProperties || [];
-  cssProperties.forEach((name,i) => {
-    this.inlineStyle[name] = element.style[name] || '';
-    this.computedStyle[name] = style[name];
+  if(cssProperties)
+    this.snapshotStyle(cssProperties);
+
+  this.snapshotStyle('display');
+}
+
+
+/**
+ * @param {Array<string>|string} prop
+ */
+State.prototype.snapshotStyle = function(prop) {
+  if(!Array.isArray(prop))
+    prop =[prop];
+
+  prop.forEach((name,i) => {
+    this.inlineStyle[name] = this.element.style[name] || '';
+    this.computedStyle[name] = this.liveStyle[name];
   });
 }
 
@@ -51,7 +64,7 @@ Object.defineProperty(State.prototype, 'left', {get:function(){return this.clien
 * @return {boolean}
 */
 State.prototype.isDisplayed = function() {
-  return 'none' !== this.display && this.offsetParent;
+  return 'none' !== this.computedStyle.display && this.parentElement;
 }
 
 /**
@@ -101,17 +114,7 @@ State.prototype.restoreStyle= function (element) {
   if(!this.inlineStyle)
     return;
   
-  for(let prop in this.inlineCSS) {
-    element.style[prop] = this.inlineCSS[prop];
-  }
-}
-
-/**
-*
-*/
-class NestedState extends State {
-  constructor(element, cssProperties) {
-    super(element, cssProperties);
-    this.children = Array.prototype.map.call(element.children, child=>new NestedState(child));
+  for(let prop in this.inlineStyle) {
+    element.style[prop] = this.inlineStyle[prop];
   }
 }

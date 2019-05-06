@@ -190,11 +190,56 @@ class FadeInAnimation extends ElementAnimation {
 }
 
 /**
+ * 
+ */
+class ExitAnimation extends ElementAnimation {
+
+  /**
+   * 
+   * @param {HTMLElement} target 
+   * @param {State} previous 
+   * @param {State} current 
+   */
+  constructor(target, previous, current) {
+    super(target);
+    this.previous = previous;
+    this.current = current;
+    current.snapshotStyle(['top', 'left', 'display', 'opacity', 'position', 'margin'])
+  }
+
+  revive() {
+    if(null == this.target.parentElement) {
+      this.killAction = 'remove';
+      this.previous.parentElement.appendChild(this.target);
+    } else if (this.current.computedStyle.display = 'none') {
+      this.killAction = 'display';
+      this.target.style.display = this.previous.computedStyle.display;
+    }
+
+    this.target.style.position = 'absolute';
+    this.target.style.top = (this.previous.clientTop -  this.target.offsetParent.clientTop) + 'px';
+    this.target.style.left = (this.previous.clientLeft  - this.target.offsetParent.clientLeft) + 'px';
+    this.target.style.margin = 0;
+  }
+
+
+  afterComplete(wasCanceled) {
+    if('remove' === this.killAction)
+      this.target.parentElement.removeChild(this.target);
+
+    this.current.restoreStyle(this.target);
+    super.afterComplete(wasCanceled);
+  }
+
+
+}
+
+/**
 *
 */
-class FadeOutAnimation extends ElementAnimation {
-  constructor(element) {
-    super(element);
+class FadeOutAnimation extends ExitAnimation {
+  constructor(element, previous, next) {
+    super(element, previous, next);
     this.firstFrame();
   }
   
@@ -203,9 +248,7 @@ class FadeOutAnimation extends ElementAnimation {
   }
   
   firstFrame() {
-    this.target.style.top = this.previousState.top  + 'px';
-    this.target.style.left = this.previousState.left + 'px';
-    this.target.style.position = 'relative';
+    this.revive();
     this.target.style.opacity = 1;
   }
   
@@ -214,8 +257,37 @@ class FadeOutAnimation extends ElementAnimation {
     this.target.style.opacity = 0;
   }
   
-  afterComplete() {
+  afterComplete(wasCanceled) {
     this.target.classList.remove('animate--opacity');
-    super.afterComplete();
+    super.afterComplete(wasCanceled);
+  }
+}
+
+/**
+ * 
+ */
+class DropAndFadeAnimation extends ExitAnimation {
+  constructor(target, previous, current) {
+    super(target, previous, current);
+
+    this.current.snapshotStyle(['transform', 'opacity']);
+    this.firstFrame();
+  }
+
+  firstFrame() {
+    this.revive();
+    this.target.style.opacity = 1;
+    this.target.style.transform = 'scale(1,1)';
+  }
+
+  secondFrame() {
+    this.target.classList.add('animate--transform', 'animate--opacity');
+    this.target.style.opacity = 0;
+    this.target.style.transform = 'scale(0.8, 0.8)';
+  }
+
+  afterComplete(wasCanceled) {
+    this.target.classList.remove('animate--transform', 'animate--opacity');
+    super.afterComplete(wasCanceled);
   }
 }

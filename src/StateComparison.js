@@ -23,7 +23,11 @@ class StateComparison {
   
     this.gatherPrevious(this.root);
   }
-  
+
+  get cssProperties() {
+    return ['position', 'display', 'opacity', 'transform']
+  }
+
   /**
   *
   */
@@ -47,7 +51,7 @@ class StateComparison {
   * @param {HTMLElement} node
   */
   gatherPrevious(node) {
-    this.previousState.set(node, new State(node));
+    this.previousState.set(node, new State(node, this.cssProperties));
     Array.prototype.forEach.call(node.children, (child)=>{this.gatherPrevious(child)});
   }
   

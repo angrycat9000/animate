@@ -78,8 +78,9 @@ Coordinator.onFrame = function() {
   if(0 === this.pending.size && this.changes.length > 0)
     this.processChanges();
 
-  if(this.changes.length || this.secondFrame.length)
-    this.requestFrame(); 
+  /*if(this.changes.length || this.secondFrame.length)
+    this.requestFrame(); */
+    
   console.groupEnd();
 } 
 Coordinator.onFrameFunc = Coordinator.onFrame.bind(Coordinator);

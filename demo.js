@@ -52,11 +52,19 @@ function fade() {
       let exit = differences.filter(c=>Diff.Exit === c.action);
       let move = differences.filter(c=>Diff.Move === c.action);
       let enter = differences.filter(c=>Diff.Enter === c.action);
-      
-      move = move.map(c=>TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play().promise);
+
+      exit = exit.map(c=>new DropAndFadeAnimation(c.node, c.previousState, c.nextState).play().promise)
+      move = move.map(c=>TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState));
       enter = enter.map(c=>new FadeInAnimation(c.node));
 
-      DeltaAnimation.animateChange(()=>{}, ()=>{enter.forEach(a=>a.play())});
+      Promise.all(exit)
+      .then(()=>Promise.all(move.map(a=>a.play().promise)))
+      .then(()=>{enter.forEach(a=>a.play())});
+
+
+
+
+      //DeltaAnimation.animateChange(()=>{}, ()=>{enter.forEach(a=>a.play())});
     }
   );
 }
