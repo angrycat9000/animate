@@ -36,6 +36,8 @@ function stretch() {
       differences.forEach((c)=>{
         if(Diff.Move === c.action)
           TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play()
+        else if(Diff.Enter == c.action)
+          new TransformAnimation(c.node,{scaleY:0}).play()
       })
     }
   );
@@ -49,15 +51,22 @@ function fade() {
       }
     },
     (differences)=>{
-      let exit = differences.filter(c=>Diff.Exit === c.action);
-      let move = differences.filter(c=>Diff.Move === c.action);
-      let enter = differences.filter(c=>Diff.Enter === c.action);
+      let enter = [], 
+          move= [],  
+          exit = [];
 
-      exit = exit.map(c=>new DropAndFadeAnimation(c.node, c.previousState, c.nextState).play().promise)
-      move = move.map(c=>TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState));
-      enter = enter.map(c=>new FadeInAnimation(c.node));
+      // process in order found so parents are proccessed before children
 
-      Promise.all(exit)
+      differences.forEach(d=>{
+        if(Diff.Exit == d.action)
+          exit.push(new DropAndFadeAnimation(d.node, d.previousState, d.nextState).play())
+        else if(Diff.Move == d.action)
+          move.push(TransformAnimation.ofTranslation(d.node, d.previousState, d.nextState))
+        else if(Diff.Enter == d.action)
+          enter.push(new FadeInAnimation(d.node))
+      })
+
+      Promise.all(exit.map(a=>a.promise))
       .then(()=>Promise.all(move.map(a=>a.play().promise)))
       .then(()=>{enter.forEach(a=>a.play())});
 
@@ -83,7 +92,8 @@ function addMore(e) {
     (differences)=>{
       differences.forEach((c)=>{
         if(Diff.Move === c.action) 
-          TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play();
+          new TransformAnimation(c.node,
+            {translateX: c.netTranslation.left, translateY:c.netTranslation.top}).play();
         else if (Diff.Enter === c.action)
           new FadeInAnimation(c.node).play();
       });

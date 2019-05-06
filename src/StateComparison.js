@@ -66,36 +66,35 @@ class StateComparison {
     
     parentTranslation = parentTranslation || Translation.None;
     
+    let translation = getTranslation(previousState,nextState);
+
     let result = {node, 
                   nextState, 
                   previousState,
                   didChildrenMove:false, 
-                  translation:getTranslation(previousState,nextState)
+                  netTranslation: translation.subtract(parentTranslation, true)
                  };
-    
+
     if(!previousState) 
       result.action =  Diff.Enter
     else if(!previousState.isDisplayed() && nextState.isDisplayed())
       result.action = Diff.Enter
     else if(previousState.isDisplayed() && !nextState.isDisplayed())
       result.action = Diff.Exit
-    else if(!result.translation.equals(parentTranslation))
-      result.action  = Diff.Move
-    else
+    else if(result.netTranslation.equals(Translation.None))
       result.action = Diff.None;
-      
-  
+    else
+      result.action  = Diff.Move;
        
     this.previousState.delete(node);
+    if(Diff.None !== result.action)
+      this.differences.push(result);  
     
     Array.prototype.forEach.call(node.children, (child)=>{
-      let childResult = this.gatherNext(child, result.translation);
+      let childResult = this.gatherNext(child, translation);
       result.didChildrenMove =  result.didChildrenMove || Diff.Move === childResult.action;
     });
     
-    if(Diff.None !== result.action)
-      this.differences.push(result);  
-      
     return result;
   }
 }

@@ -7,6 +7,18 @@ class Translation {
   equals(other) {
     return other && other.top == this.top && other.left == this.left;
   }
+
+  subtract(other, returnNew) {
+    const top = this.top - other.top;
+    const left = this.left - other.left;
+
+    if(returnNew)
+      return new Translation(left,top);
+      
+    this.left = left;
+    this.top = top;
+    return this;
+  }  
 }  
 
 Translation.None = new Translation(0,0);
@@ -17,22 +29,16 @@ Translation.None = new Translation(0,0);
 * @param {Array[string]} {cssProperties} names of any inline CSS properties to save from
 */
 function State(element, cssProperties) {
-  this.element = element;
-  this.offsetTop = element.offsetTop;
-  this.offsetLeft = element.offsetLeft;
-  
   let rect = element.getBoundingClientRect();
+  this.top = rect.top;
+  this.left = rect.left;
+  this.height = rect.height;
+  this.width = rect.width;
   
-  this.clientTop = rect.top;
-  this.clientLeft = rect.left;
-   
-  this.height = element.clientHeight;
-  this.width = element.clientWidth;
-  
-  //this.offsetParent = element.offsetParent;
+  this.element = element;
   this.parentElement = element.parentElement;
 
-  let style = this.liveStyle = window.getComputedStyle(element);
+  this.liveStyle = window.getComputedStyle(element);
   
   this.inlineStyle = {};
   this.computedStyle = {};
@@ -57,8 +63,6 @@ State.prototype.snapshotStyle = function(prop) {
   });
 }
 
-Object.defineProperty(State.prototype, 'top', {get:function(){return this.clientTop}})
-Object.defineProperty(State.prototype, 'left', {get:function(){return this.clientLeft}})
 
 /**
 * @return {boolean}
@@ -67,15 +71,7 @@ State.prototype.isDisplayed = function() {
   return 'none' !== this.computedStyle.display && this.parentElement;
 }
 
-/**
-* @param {State} other
-*/
-State.translationFrom = function(other) {
-  return {
-    x: this.clientTop - other.clientTop,
-    y: this.clientLeft - other.clientLeft
-  }
-}
+
 
 /**
 * @param {State} other
@@ -83,8 +79,8 @@ State.translationFrom = function(other) {
 State.prototype.hasChangeFrom = function( other ) {
   return this.width !== other.width ||
     this.height !== other.height ||
-    this.clientTop !== other.clientTop ||
-    this.clientLeft !== other.clientLeft;
+    this.top !== other.top ||
+    this.left !== other.left;
 }
 
 
@@ -92,7 +88,7 @@ State.prototype.hasChangeFrom = function( other ) {
 * @param {State} other
 */
 State.prototype.translationFrom = function( other ) {
-  return new Translation(this.clientLeft - other.clientLeft, this.clientTop - other.clientTop);
+  return new Translation(this.left - other.left, this.top - other.top);
 }
 /**
 * @param {State} other

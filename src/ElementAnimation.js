@@ -132,8 +132,8 @@ class TransformAnimation extends ElementAnimation {
   
   static ofTranslation(element, previous, next) {
     let options = {};
-    options.translateX = previous.offsetLeft - next.offsetLeft;
-    options.translateY = previous.offsetTop - next.offsetTop;
+    options.translateX = previous.left - next.left;
+    options.translateY = previous.top - next.top;
     /*options.scaleX = next.width > 0 ? previous.width / next.width : 0;
     options.scaleY = next.height > 0 ? previous.height /next.height : 0;*/
     return new TransformAnimation(element, options);
@@ -189,6 +189,34 @@ class FadeInAnimation extends ElementAnimation {
   }
 }
 
+
+/**
+*
+*/
+class RiseAndFadeAnimation extends ElementAnimation {
+  constructor(element) {
+    super(element);
+    this.firstFrame();
+  }
+  toString() {
+    return 'Rise+Fade ' + this.target.ToString();
+  }
+  
+  firstFrame() {
+    this.target.style.opacity = 0;
+  }
+  
+  secondFrame() {
+    this.target.classList.add('animate--transform', 'animate--opacity');
+    this.target.style.opacity = '';
+  }
+  
+  afterComplete() {
+    this.target.classList.remove('animate--transform', 'animate--opacity');
+    super.afterComplete();
+  }
+}
+
 /**
  * 
  */
@@ -204,7 +232,7 @@ class ExitAnimation extends ElementAnimation {
     super(target);
     this.previous = previous;
     this.current = current;
-    current.snapshotStyle(['top', 'left', 'display', 'opacity', 'position', 'margin'])
+    this.current.snapshotStyle(['top', 'left', 'display', 'opacity', 'position', 'margin'])
   }
 
   revive() {
@@ -217,8 +245,10 @@ class ExitAnimation extends ElementAnimation {
     }
 
     this.target.style.position = 'absolute';
-    this.target.style.top = (this.previous.clientTop -  this.target.offsetParent.clientTop) + 'px';
-    this.target.style.left = (this.previous.clientLeft  - this.target.offsetParent.clientLeft) + 'px';
+
+    let parentPosition =   this.target.offsetParent.getBoundingClientRect();
+    this.target.style.top = (this.previous.top -  parentPosition.top) + 'px';
+    this.target.style.left = (this.previous.left  - parentPosition.left) + 'px';
     this.target.style.margin = 0;
   }
 

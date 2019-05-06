@@ -58,4 +58,5 @@ button {
 
 .animate--opacity.animate--transform {
   transition-property: transform, opacity;
+  transform-origin:center center;
 }
