@@ -32,10 +32,10 @@ function stretch() {
     ()=>{
       for(let i = 0; i< container.children.length; i++) updateViz(i);
     }, 
-    (differences)=>{
-      differences.forEach((c)=>{
-        if(Diff.Move === c.action)
-          TransformAnimation.ofTranslation(c.node, c.previousState, c.nextState).play()
+    (compare)=>{
+      compare.differences.forEach((c)=>{
+        if(Diff.Move == c.action)
+          TransformAnimation.ofTranslation(c.node, c.previous, c.next).play()
         else if(Diff.Enter == c.action)
           new TransformAnimation(c.node,{scaleY:0}).play()
       })
@@ -50,18 +50,17 @@ function fade() {
         updateViz(i);
       }
     },
-    (differences)=>{
+    (compare)=>{
       let enter = [], 
           move= [],  
           exit = [];
 
       // process in order found so parents are proccessed before children
-
-      differences.forEach(d=>{
-        if(Diff.Exit == d.action)
-          exit.push(new DropAndFadeAnimation(d.node, d.previousState, d.nextState).play())
+      compare.differences.forEach(d=>{
+        if(Diff.Exit == d.action && compare.isExitRoot(d.node))
+          exit.push(new DropAndFadeAnimation(d.node, d.previous, d.next).play())
         else if(Diff.Move == d.action)
-          move.push(TransformAnimation.ofTranslation(d.node, d.previousState, d.nextState))
+          move.push(TransformAnimation.ofTranslation(d.node, d.previous, d.next))
         else if(Diff.Enter == d.action)
           enter.push(new RiseAndFadeAnimation(d.node))
       })
@@ -89,8 +88,8 @@ function addMore(e) {
     ()=>{
       parent.insertBefore(duplicate, target);
     },
-    (differences)=>{
-      differences.forEach((c)=>{
+    (compare)=>{
+      compare.differences.forEach((c)=>{
         if(Diff.Move === c.action) 
           new TransformAnimation(c.node,
             {translateX: c.netTranslation.left, translateY:c.netTranslation.top}).play();

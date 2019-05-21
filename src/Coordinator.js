@@ -4,6 +4,7 @@ var Coordinator = {
   requestId: 0,
   subscribed: false,
   changes: [],
+  manual: false,
 }
 
   
@@ -62,6 +63,7 @@ Coordinator.addAnimation = function(animation) {
 }
   
 Coordinator.requestFrame = function() {
+  if(this.manual) return;
   console.debug('Coordinator.requestFrame', this.requestId)
   if(this.requestId !== 0)
     return;
@@ -108,8 +110,8 @@ Coordinator.processChanges = function() {
   for(let c of activeChanges)
     c.change();
 
-  compare.compare();
+  compare.checkpoint();
 
   for(let c of activeChanges)
-    c.animation(compare.differences);
+    c.animation(compare);
 }

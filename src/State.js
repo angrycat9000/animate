@@ -68,7 +68,7 @@ State.prototype.snapshotStyle = function(prop) {
 * @return {boolean}
 */
 State.prototype.isDisplayed = function() {
-  return 'none' !== this.computedStyle.display && this.parentElement;
+  return this.width !=0 && this.height != 0 && 'none' !== this.computedStyle.display && this.parentElement;
 }
 
 
