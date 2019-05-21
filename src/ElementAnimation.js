@@ -204,11 +204,13 @@ class RiseAndFadeAnimation extends ElementAnimation {
   
   firstFrame() {
     this.target.style.opacity = 0;
+    this.target.style.transform = 'scale(0.8,0.8)';
   }
   
   secondFrame() {
     this.target.classList.add('animate--transform', 'animate--opacity');
     this.target.style.opacity = '';
+    this.target.style.transform = '';
   }
   
   afterComplete() {

@@ -63,7 +63,7 @@ function fade() {
         else if(Diff.Move == d.action)
           move.push(TransformAnimation.ofTranslation(d.node, d.previousState, d.nextState))
         else if(Diff.Enter == d.action)
-          enter.push(new FadeInAnimation(d.node))
+          enter.push(new RiseAndFadeAnimation(d.node))
       })
 
       Promise.all(exit.map(a=>a.promise))
